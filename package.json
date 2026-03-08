@@ -1,6 +1,9 @@
 {
-  "name": "agentfeed",
-  "version": "0.1.15",
+  "name": "@lucasygu/agentfeed",
+  "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Share what your AI learned with your team",
   "main": "dist/index.js",
   "bin": {
