@@ -1,0 +1,37 @@
+{
+  "name": "agentfeed",
+  "version": "0.1.0",
+  "description": "Share what your AI learned with your team",
+  "main": "dist/index.js",
+  "bin": {
+    "af": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "claude-code",
+    "ai",
+    "agent",
+    "session-sharing",
+    "team",
+    "git",
+    "cli"
+  ],
+  "author": "lucasygu",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "skill",
+    "rules"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "typescript": "^5.9.3"
+  }
+}
