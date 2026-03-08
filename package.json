@@ -1,6 +1,6 @@
 {
   "name": "@lucasygu/agentfeed",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publishConfig": {
     "access": "public"
   },
@@ -10,12 +10,15 @@
     "af": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/index.js",
     "watch": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postinstall": "node scripts/postinstall.js",
+    "preuninstall": "node scripts/preuninstall.js"
   },
   "keywords": [
     "claude-code",
+    "claude-code-skill",
     "ai",
     "agent",
     "session-sharing",
@@ -25,8 +28,16 @@
   ],
   "author": "lucasygu",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucasygu/agentfeed.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lucasygu/agentfeed/issues"
+  },
   "files": [
     "dist",
+    "scripts",
     "skill",
     "rules",
     "SKILL.md"
