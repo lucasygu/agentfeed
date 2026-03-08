@@ -1,6 +1,6 @@
 {
   "name": "@lucasygu/agentfeed",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publishConfig": {
     "access": "public"
   },
@@ -28,7 +28,8 @@
   "files": [
     "dist",
     "skill",
-    "rules"
+    "rules",
+    "SKILL.md"
   ],
   "engines": {
     "node": ">=16"
