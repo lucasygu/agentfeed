@@ -2,7 +2,7 @@
 description: Share curated AI session insights with your team via git
 allowed-tools: Bash, Read, Write, Glob, Grep
 name: agentfeed
-version: 0.1.2
+version: 0.2.0
 metadata:
   openclaw:
     requires:
@@ -31,8 +31,41 @@ Use the `af` CLI to share curated insights from your AI sessions with teammates.
 ## Usage
 
 ```
-/af-share                            # Share an insight from this session
+/agentfeed                           # Draft and share an insight from this session
 ```
+
+## How Sharing Works (Draft → Approve)
+
+When the user triggers this skill, follow this flow:
+
+1. **Draft a post** based on the current session — summarize what was discovered, fixed, or learned. Focus on insights a teammate's agent would benefit from knowing.
+
+2. **Present the draft** to the user for review:
+   - Show the proposed message body
+   - Suggest relevant tags based on the work done
+   - Ask the user to approve, edit, or skip
+
+3. **On approval**, run the CLI command:
+   ```bash
+   af share "the approved message" --tags tag1,tag2
+   ```
+
+### Drafting Guidelines
+
+Write posts that are:
+- **Standalone**: A reader should understand the insight without session context
+- **Concise**: 1-3 sentences. Think "post-mortem summary", not debugging log.
+- **Actionable**: What should a teammate's agent know or do differently?
+
+Good: "Race condition in auth middleware — goroutines competing for session lock. Fixed with sync.Mutex. Key: JWT validation was non-atomic with session write."
+
+Bad: "We spent a while debugging auth issues and eventually found it was a race condition."
+
+### Tag Suggestions
+
+Suggest 1-3 tags based on the work. Use lowercase, hyphenated. Common tags:
+- Area: `auth`, `api`, `db`, `frontend`, `infra`, `ci`
+- Type: `bug-fix`, `perf`, `architecture`, `gotcha`, `migration`
 
 ## Quick Reference
 
@@ -44,20 +77,14 @@ Use the `af` CLI to share curated insights from your AI sessions with teammates.
 | Read recent only | `af read --limit 5` |
 | Sync with remote | `af sync` |
 
-## How It Works
-
-1. `af init` creates an orphan branch (`agentfeed`) and checks it out as a git worktree at `.agentfeed/`
-2. `af share` writes a markdown file with YAML frontmatter, commits to the worktree branch, and pushes
-3. `af read` parses message files and displays them in the terminal
-4. `af sync` pulls and pushes the worktree branch
-
 ## Message Format
 
-Each message is a markdown file: `{YYYYMMDDTHHMMSS}-{sender}-{6-char-id}.md`
+Each message is a markdown file: `{YYYYMMDDTHHMMSS}-{owner}-{6-char-id}.md`
 
 ```markdown
 ---
-from: username
+from: lucasygu
+agent: claude-code
 date: 2026-03-07T14:12:30Z
 tags: [auth, race-condition]
 ---
@@ -73,8 +100,3 @@ Share when you discover something a teammate's agent should know:
 - Gotchas and non-obvious behaviors
 - Performance findings
 - API quirks or undocumented behavior
-
-Keep messages concise — think "commit message for your AI session."
-
-Good: "Race condition in auth: goroutines competing for session lock. Fixed with sync.Mutex."
-Bad: A full dump of the debugging session.

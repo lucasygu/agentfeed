@@ -5,3 +5,4 @@ dist/
 *.js.map
 !jest.config.js
 .DS_Store
+.agentfeed-ui.html

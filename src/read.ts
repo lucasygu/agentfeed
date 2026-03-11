@@ -1,39 +1,9 @@
 import * as path from "path";
 import * as fs from "fs";
 import { getRepoRoot } from "./git";
+import { loadMessages, loadReactions, shortId } from "./messages";
 
 const DIR = ".agentfeed";
-
-interface Message {
-  filename: string;
-  from: string;
-  date: Date;
-  tags: string[];
-  body: string;
-}
-
-function parseMessage(filepath: string): Message | null {
-  const raw = fs.readFileSync(filepath, "utf-8");
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) return null;
-
-  const frontmatter = match[1];
-  const body = match[2].trim();
-
-  const fromMatch = frontmatter.match(/^from:\s*(.+)$/m);
-  const dateMatch = frontmatter.match(/^date:\s*(.+)$/m);
-  const tagsMatch = frontmatter.match(/^tags:\s*\[(.+)\]$/m);
-
-  return {
-    filename: path.basename(filepath),
-    from: fromMatch ? fromMatch[1].trim() : "unknown",
-    date: dateMatch ? new Date(dateMatch[1].trim()) : new Date(),
-    tags: tagsMatch
-      ? tagsMatch[1].split(",").map((t) => t.trim())
-      : [],
-    body,
-  };
-}
 
 export function read(limit?: number): void {
   const root = getRepoRoot();
@@ -44,29 +14,47 @@ export function read(limit?: number): void {
     process.exit(1);
   }
 
-  const files = fs
-    .readdirSync(worktreePath)
-    .filter((f) => f.endsWith(".md") && !f.startsWith("."))
-    .sort();
+  const allMessages = loadMessages(worktreePath);
+  const reactions = loadReactions(worktreePath);
 
-  if (files.length === 0) {
+  const posts = allMessages.filter((m) => !m.replyTo);
+  const comments = allMessages.filter((m) => m.replyTo);
+
+  if (posts.length === 0) {
     console.log("No messages yet. Share something: af share \"your insight\"");
     return;
   }
 
-  const messages = files
-    .map((f) => parseMessage(path.join(worktreePath, f)))
-    .filter((m): m is Message => m !== null);
-
-  const shown = limit ? messages.slice(-limit) : messages;
+  const shown = limit ? posts.slice(-limit) : posts;
 
   for (const msg of shown) {
     const time = msg.date.toLocaleString();
     const tags = msg.tags.length > 0 ? ` [${msg.tags.join(", ")}]` : "";
-    console.log(`\x1b[36m${msg.from}\x1b[0m  ${time}${tags}`);
+    const agentBadge = msg.agent ? ` \x1b[2mvia ${msg.agent}\x1b[0m` : "";
+    const id = shortId(msg.filename);
+    const likes = reactions[msg.filename]?.length || 0;
+    const commentCount = comments.filter((c) => c.replyTo === msg.filename).length;
+
+    const stats: string[] = [];
+    if (likes > 0) stats.push(`${likes} like${likes !== 1 ? "s" : ""}`);
+    if (commentCount > 0) stats.push(`${commentCount} comment${commentCount !== 1 ? "s" : ""}`);
+    const statsStr = stats.length > 0 ? `  \x1b[2m${stats.join(" · ")}\x1b[0m` : "";
+
+    console.log(`\x1b[36m${msg.from}\x1b[0m${agentBadge}  ${time}${tags}  \x1b[2m#${id}\x1b[0m`);
     console.log(msg.body);
+    if (statsStr) console.log(statsStr);
+
+    // Show comments inline
+    const postComments = comments
+      .filter((c) => c.replyTo === msg.filename)
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    for (const c of postComments) {
+      const cAgent = c.agent ? ` via ${c.agent}` : "";
+      console.log(`  \x1b[2m└ \x1b[36m${c.from}\x1b[0m\x1b[2m${cAgent}: ${c.body}\x1b[0m`);
+    }
+
     console.log();
   }
 
-  console.log(`\x1b[2m${shown.length}/${messages.length} messages\x1b[0m`);
+  console.log(`\x1b[2m${shown.length}/${posts.length} posts\x1b[0m`);
 }

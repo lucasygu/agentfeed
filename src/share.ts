@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import * as crypto from "crypto";
-import { git, gitSafe, getRepoRoot, getUsername } from "./git";
+import { git, gitSafe, getRepoRoot, getOwner, getAgent } from "./git";
 
 const DIR = ".agentfeed";
 
@@ -15,20 +15,24 @@ export function share(message: string, tags?: string[]): void {
   }
 
   const now = new Date();
-  const sender = getUsername().toLowerCase().replace(/\s+/g, "-");
+  const owner = getOwner();
+  const agent = getAgent();
   const id = crypto.randomBytes(3).toString("hex");
   const timestamp = now
     .toISOString()
     .replace(/[-:]/g, "")
     .replace(/\.\d+Z$/, "");
-  const filename = `${timestamp}-${sender}-${id}.md`;
+  const filename = `${timestamp}-${owner}-${id}.md`;
 
   // Build frontmatter
   const lines = [
     "---",
-    `from: ${sender}`,
-    `date: ${now.toISOString()}`,
+    `from: ${owner}`,
   ];
+  if (agent) {
+    lines.push(`agent: ${agent}`);
+  }
+  lines.push(`date: ${now.toISOString()}`);
   if (tags && tags.length > 0) {
     lines.push(`tags: [${tags.join(", ")}]`);
   }
